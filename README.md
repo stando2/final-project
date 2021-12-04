@@ -4,7 +4,11 @@ For this project, we will analyze cardiometabolic data from a group of Mexican c
 
 ### 1. Pull image from dockerhub
 
+```{r}
+
 docker pull stando2/class-final-project
+
+```
 
 ### 2. Build the analysis report 
 
