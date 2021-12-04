@@ -1,0 +1,105 @@
+---
+title: "INFO550 Analysis"
+author: "Sonia Tandon"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output: html_document
+---
+
+```{r, include = FALSE}
+here::i_am('R/analysis.Rmd')
+```
+
+```{r, set-environment, include = FALSE}
+#load packages 
+library(ggplot2)
+library(dplyr)
+library(VIM)
+library(compareGroups)
+library(Hmisc)
+library(bookdown)
+library(knitr)
+
+#load data 
+cmh <- read.csv(here::here('raw_data', 'class-project-data.csv'))
+
+```
+# View data 
+
+```{r, view-data, echo = FALSE, message = FALSE, warning = FALSE}
+
+glimpse(cmh)
+```
+There are `r nrow(cmh)` observations in the dataset, with `r ncol(cmh)` features measured on each. 
+
+```{r, data-cleaning, include = FALSE, message = FALSE}
+# rename variables, convert sex to factor variable
+cmh <- cmh %>% 
+	rename(id = folio, sbp_11y = SISTO_11y_v2, dbp_11y = DIAST_11y_v2, weight_kg = WtPeso, fm_perc_11y = FM_perc_11y_new) %>% 
+	mutate(sex = as.factor(sex)) 
+
+#label levels of sex 
+levels(cmh$sex) <- c("Male", "Female")
+
+#label data 
+var.labels <- c(sex = "Sex",
+				adiponec_11y = "Adiponectin",
+				leptin_11y = "Leptin",
+				il6_11y = "IL-6",
+				insulin_11y = "Insulin",
+				glucose_11y = "Glucose",
+				cholester_11y = "Total Cholesterol",
+				hdl_11y = "HDL",
+				tgs_11y = "Triglycerides",
+				ldl_11y = "LDL",
+				sum_skin_11y = "Sum of Skinfolds",
+				crp_11y = "C-reactive Protein",
+				sbp_11y = "Systolic Blood Pressure, mmHg",
+				dbp_11y = "Diastolic Blood Pressure, mmHg",
+				weight_kg = "Weight, kg",
+				fm_perc_11y = "Fat mass, %")
+
+cmh <- Hmisc::upData(cmh, labels = var.labels)
+
+```
+# Descriptive Statistics
+
+```{r, summary-statistics, echo = FALSE}
+cmh_factors <- cmh %>% 
+			select(sex, adiponec_11y, leptin_11y, il6_11y, insulin_11y, glucose_11y, cholester_11y, hdl_11y, tgs_11y, ldl_11y, sum_skin_11y, crp_11y, sbp_11y, dbp_11y, weight_kg, fm_perc_11y)
+
+table1 <- descrTable(select(cmh_factors, sex, adiponec_11y, leptin_11y, il6_11y, insulin_11y, glucose_11y, cholester_11y, hdl_11y, tgs_11y, ldl_11y, sum_skin_11y, crp_11y, sbp_11y, dbp_11y, weight_kg, fm_perc_11y))
+
+export2md(table1)
+
+```
+As shown in Table 2.1, some features have missing data. 
+
+# Descriptive statistics stratified by sex
+
+```{r, stratified-table, echo = FALSE}
+table2 <- compareGroups(sex ~ adiponec_11y + leptin_11y + il6_11y + insulin_11y + glucose_11y + cholester_11y + hdl_11y + tgs_11y + ldl_11y + sum_skin_11y + crp_11y + sbp_11y + dbp_11y + weight_kg + fm_perc_11y, data=cmh_factors)
+
+table2_output <- createTable(table2)
+
+export2md(table2_output)
+
+```
+
+# Patterns of missing data 
+
+```{r, missing-data, echo = FALSE, warning = FALSE, message = FALSE}
+#plot patterns of missingness
+aggr_plot <- aggr(cmh_factors, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE, labels=names(cmh), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"))
+
+aggr_plot
+
+```
+Blood pressure (SBP, DBP) and inflammatory markers (IL-6, CRP) have the highest degree of missingness.
+
+
+
+
+
+
+
+
